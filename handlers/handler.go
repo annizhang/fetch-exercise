@@ -1,34 +1,69 @@
 package handlers
 import (
-  memdb "github.com/hashicorp/go-memdb"
+  "bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+
+  "github.com/annizhang/fetch-exercise/models"
+  "github.com/julienschmidt/httprouter"
 )
 
-type handler struct {
-  db memdb
+type Handler struct {
+  s Service
 }
 
-func NewHandler(db memdb) handler {
-  return handler {
-    db: db,
+func NewHandler(s Service) Handler {
+  return Handler {
+    s: s,
   }
 }
 
-func (h handler) AddTransaction(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
+func (h Handler) AddTransaction(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+
+  fmt.Printf("In Handler AddTransaction\n")
 
   var bodyBytes []byte
 	bodyBytes, _ = ioutil.ReadAll(r.Body)
 	r.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
 
-  var request models.TransactionRequest
+  var request models.Transaction
   if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		fmt.Printf("error decoding transaction request: %+v\n", err)
 		return
 	}
 
-  //no error decoding
-  // add interaction to table
+  h.s.AddTransaction(context.Background(), request)
 
+  w.WriteHeader(http.StatusOK)
+  return
+}
 
-  w.WriteHeader(http:StatusOK)
+func (h Handler) SpendPoints(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+  fmt.Printf("in Handler SpendPoints\n")
+
+  var request models.SpendRequest
+  if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		fmt.Printf("error decoding spend request: %+v\n", err)
+		return
+	}
+
+  spentPoints := h.s.SpendPoints(context.Background(), request)
+  w.Header().Set("Content-Type", "application/json")
+  json.NewEncoder(w).Encode(spentPoints)
+
+  return
+}
+
+func (h Handler) GetPoints(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+  points := h.s.GetPoints(context.Background())
+  fmt.Println("all points: ", points)
+
+  w.Header().Set("Content-Type", "application/json")
+  json.NewEncoder(w).Encode(points)
+
   return
 }
