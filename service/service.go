@@ -21,17 +21,11 @@ func New(db *models.AllTransactions) Service {
 
 //AddTransaction appends a new transaction to our in-memory and maintains order from oldest to newest
 func (s Service) AddTransaction(ctx context.Context, transaction models.Transaction) {
-  fmt.Printf("in service addtransaction len %d\n", len(s.db.Transactions))
-
   s.db.Transactions = append(s.db.Transactions, transaction)
   // sort transactions by time stamp
   sort.Slice(s.db.Transactions, func(i, j int) bool {
     return s.db.Transactions[i].TimeStamp.Before(s.db.Transactions[j].TimeStamp)
   })
-
-  fmt.Printf("transaction added len %d\n", len(s.db.Transactions))
-  fmt.Printf("all transactions: \n")
-  s.printTransactions()
 
   return
 }
@@ -57,7 +51,7 @@ func (s Service) SpendPoints(ctx context.Context, spendRequest models.SpendReque
     return nil, fmt.Errorf("Not enough points to spend")
   }
 
-  for _, transaction := range s.db.Transactions {
+  for i, transaction := range s.db.Transactions {
     if points == 0 {
       break
     }
@@ -69,22 +63,22 @@ func (s Service) SpendPoints(ctx context.Context, spendRequest models.SpendReque
         //if payer is already in the map
         if _, ok := spentPoints[transaction.Payer]; ok {
           spentPoints[transaction.Payer] -= points
-          transaction.Points -= points
+          s.db.Transactions[i].Points -= points
           break
         }
         spentPoints[transaction.Payer] = -1 * points
-        transaction.Points -= points
+        s.db.Transactions[i].Points -= points
         break
       }
       // if transaction's points does not cover all of points to be spent
       points -= transaction.Points
       if _, ok := spentPoints[transaction.Payer]; ok {
         spentPoints[transaction.Payer] -= transaction.Points
-        transaction.Points = 0
+        s.db.Transactions[i].Points = 0
         continue
       }
       spentPoints[transaction.Payer] = -1 * transaction.Points
-      transaction.Points = 0
+      s.db.Transactions[i].Points = 0
     }
 
     //handling negative transaction points
@@ -92,11 +86,11 @@ func (s Service) SpendPoints(ctx context.Context, spendRequest models.SpendReque
       if _, ok := spentPoints[transaction.Payer]; ok {
         spentPoints[transaction.Payer] -= transaction.Points
         points -= transaction.Points
-        transaction.Points = 0
+        s.db.Transactions[i].Points = 0
       }
     }
   }
-
+  
   return formatSpendResponse(spentPoints), nil
 }
 
