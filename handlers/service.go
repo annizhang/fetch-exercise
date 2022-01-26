@@ -7,6 +7,6 @@ import (
 
 type Service interface {
   AddTransaction(ctx context.Context, transaction models.Transaction)
-  SpendPoints(ctx context.Context, spendRequest models.SpendRequest) *models.SpendResponse
+  SpendPoints(ctx context.Context, spendRequest models.SpendRequest) (*models.SpendResponse, error)
   GetPoints(ctx context.Context) *models.AllPoints
 }

@@ -5,9 +5,9 @@ import (
   "fmt"
   "sort"
   "github.com/annizhang/fetch-exercise/models"
-  // memdb "github.com/hashicorp/go-memdb"
 )
 
+//Service is initiated with an empty slice/array to serve as a database to store transactions sorted from oldest to newest
 type Service struct {
   db *models.AllTransactions
 }
@@ -18,7 +18,9 @@ func New(db *models.AllTransactions) Service {
   }
 }
 
-func (s Service) AddTransaction(ctx context.Context, transaction models.Transaction){
+
+//AddTransaction appends a new transaction to our in-memory and maintains order from oldest to newest
+func (s Service) AddTransaction(ctx context.Context, transaction models.Transaction) {
   fmt.Printf("in service addtransaction len %d\n", len(s.db.Transactions))
 
   s.db.Transactions = append(s.db.Transactions, transaction)
@@ -34,23 +36,38 @@ func (s Service) AddTransaction(ctx context.Context, transaction models.Transact
   return
 }
 
+//printTransactions
 func (s Service) printTransactions() {
   for _, t := range s.db.Transactions {
     fmt.Printf("payer: %s, points: %d, timestamp: %s\n", t.Payer, t.Points, t.TimeStamp)
   }
 }
 
-func (s Service) SpendPoints(ctx context.Context, spendRequest models.SpendRequest) *models.SpendResponse {
+
+//SpendPoints validates spend request and spends points from oldest to newest Transactions
+//it also handles negative interactions
+func (s Service) SpendPoints(ctx context.Context, spendRequest models.SpendRequest) (*models.SpendResponse, error) {
   points := spendRequest.Points
+
+  //map to keep track of payers' points spent
   spentPoints := make(map[string]int)
+
+  totalPoints, _ := s.getTotalPoints()
+  if points > totalPoints {
+    return nil, fmt.Errorf("Not enough points to spend")
+  }
 
   for _, transaction := range s.db.Transactions {
     if points == 0 {
       break
     }
+
+    //handling positive transaction points
     if transaction.Points > 0 {
       if transaction.Points >= points {
-        if _, ok := spentPoints[transaction.Payer]; !ok {
+
+        //if payer is already in the map
+        if _, ok := spentPoints[transaction.Payer]; ok {
           spentPoints[transaction.Payer] -= points
           transaction.Points -= points
           break
@@ -59,24 +76,28 @@ func (s Service) SpendPoints(ctx context.Context, spendRequest models.SpendReque
         transaction.Points -= points
         break
       }
-      // if t.Points < total poitns to be spentPoints
+      // if transaction's points does not cover all of points to be spent
       points -= transaction.Points
-      if _, ok := spentPoints[transaction.Payer]; !ok {
-        spentPoints[transaction.Payer] = -1 * transaction.Points
+      if _, ok := spentPoints[transaction.Payer]; ok {
+        spentPoints[transaction.Payer] -= transaction.Points
+        transaction.Points = 0
         continue
       }
-      spentPoints[transaction.Payer] -= transaction.Points
+      spentPoints[transaction.Payer] = -1 * transaction.Points
+      transaction.Points = 0
     }
+
+    //handling negative transaction points
     if transaction.Points < 0 {
       if _, ok := spentPoints[transaction.Payer]; ok {
         spentPoints[transaction.Payer] -= transaction.Points
-        points += (-1 * transaction.Points)
+        points -= transaction.Points
         transaction.Points = 0
       }
     }
   }
 
-  return formatSpendResponse(spentPoints)
+  return formatSpendResponse(spentPoints), nil
 }
 
 func formatSpendResponse(spentPoints map[string]int) *models.SpendResponse {
@@ -89,17 +110,33 @@ func formatSpendResponse(spentPoints map[string]int) *models.SpendResponse {
   }
 }
 
-func (s Service) GetPoints(ctx context.Context) *models.AllPoints {
-  allPoints := make(map[string]int)
+//getTotalPoints
+func (s Service) getTotalPoints() (int, map[string]int) {
+  totalPoints := 0
+
+  //map of each payer to their total points
+  pointsPerPayer := make(map[string]int)
+
   for _, transaction := range s.db.Transactions {
-    if _, ok := allPoints[transaction.Payer]; ok {
-      allPoints[transaction.Payer] += transaction.Points
+    totalPoints += transaction.Points
+
+    //check if payer is already in map
+    if _, ok := pointsPerPayer[transaction.Payer]; ok {
+      pointsPerPayer[transaction.Payer] += transaction.Points
       continue
     }
-    allPoints[transaction.Payer] = transaction.Points
+    pointsPerPayer[transaction.Payer] = transaction.Points
   }
 
+  return totalPoints, pointsPerPayer
+}
+
+
+//GetPoints calls internal function getTotalPoints to create a map of each payer to their total amount of points
+func (s Service) GetPoints(ctx context.Context) *models.AllPoints {
+  _, pointsPerPayer := s.getTotalPoints()
+
   return &models.AllPoints{
-    Points: allPoints,
+    Points: pointsPerPayer,
   }
 }
