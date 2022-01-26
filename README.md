@@ -135,7 +135,6 @@ curl -H "Content-Type: application/json" -X POST -d '{ "points": 5000 }' http://
     }
   ]
 }
-
 ```
 
 ### Get points
