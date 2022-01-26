@@ -4,7 +4,8 @@
 go 1.17.6
 
 ## How to Run
-    $ go run main.go
+    $ go build
+    $ ./fetch-exercise
 
     Starting server at port 8080
 
