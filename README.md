@@ -69,8 +69,7 @@ Get Points returns total payer points
 
   - Code: 200
   - Content:
-
-  ```
+```
   {
   "spent_points": [
     {
@@ -88,6 +87,7 @@ Get Points returns total payer points
   ]
 }
 ```
+
 ### Example Calls
 
 ### First add transactions
