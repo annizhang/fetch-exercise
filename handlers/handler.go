@@ -58,9 +58,18 @@ func (h Handler) SpendPoints(w http.ResponseWriter, r *http.Request, _ httproute
 	}
 
   spentPoints, err := h.s.SpendPoints(context.Background(), request)
+
   if err != nil {
-    fmt.Printf("error spending points: %+v\n", err)
-    w.WriteHeader(http.StatusInternalServerError)
+
+    resp := make(map[string]string)
+    resp["status"] = "400 BAD REQUEST"
+    resp["message"] = "Spend Points Exceeds Total Points"
+
+    fmt.Println("here0")
+
+    w.WriteHeader(http.StatusBadRequest)
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(resp)
     return
   }
 

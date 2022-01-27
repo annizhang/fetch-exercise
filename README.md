@@ -30,7 +30,7 @@ Add transaction for specific payer, transaction amount, and date
 
 * **Success Response**
 
-  - Code: 200
+  - Code: 201
 
 #### Spend Points
 Spend points using oldest payer points first and returns which points were spent from which payer
@@ -40,7 +40,7 @@ Spend points using oldest payer points first and returns which points were spent
 
 * **Method**
 
-  `PUSH`
+  `POST`
 
 * **Request Body**
 
@@ -49,7 +49,11 @@ Spend points using oldest payer points first and returns which points were spent
 
 * **Success Response**
 
-  - Code: 200
+  - Code: 204 No Content
+
+* **Error Response**
+
+  - 400 Bad Request
 
 #### Get Points
 Get Points returns total payer points
@@ -60,11 +64,6 @@ Get Points returns total payer points
 * **Method**
 
   `GET`
-
-* **Request Body**
-
-  - None
-
 
 * **Success Response**
 
@@ -108,7 +107,13 @@ curl -H "Content-Type: application/json" -X POST -d '{ "payer": "DANNON", "point
 ```
 
 ##### Response:
-
+```
+{"message":"201 Created"}
+{"message":"201 Created"}
+{"message":"201 Created"}
+{"message":"201 Created"}
+{"message":"201 Created"}
+```
 
 ### Spend points
 
@@ -144,7 +149,6 @@ curl -H "Content-Type: application/json" -X POST -d '{ "points": 5000 }' http://
 
 ```
 curl -H "Content-Type: application/json" http://localhost:8080/points
-
 ```
 
 ##### Response:
@@ -152,10 +156,14 @@ curl -H "Content-Type: application/json" http://localhost:8080/points
 ```
 {
   "points": {
-    "DANNON": 1100,
-    "MILLER COORS": 10000,
-    "UNILEVER": 200
+    "DANNON": 1000,
+    "MILLER COORS": 5300,
+    "UNILEVER": 0
   }
 }
-
 ```
+
+## Notes for Improvement
+- Add unit tests
+- Wrap responses with status codes and messages
+- Add persistent storage

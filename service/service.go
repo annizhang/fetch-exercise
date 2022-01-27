@@ -90,7 +90,7 @@ func (s Service) SpendPoints(ctx context.Context, spendRequest models.SpendReque
       }
     }
   }
-  
+
   return formatSpendResponse(spentPoints), nil
 }
 

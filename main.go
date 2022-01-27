@@ -4,7 +4,6 @@ import (
   "log"
   "fmt"
   "net/http"
-  // "github.com/hashicorp/go-memdb"
   "github.com/julienschmidt/httprouter"
   "github.com/annizhang/fetch-exercise/handlers"
   "github.com/annizhang/fetch-exercise/service"
