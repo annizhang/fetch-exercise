@@ -20,7 +20,7 @@ Add transaction for specific payer, transaction amount, and date
 
 * **Method**
 
-  `PUSH`
+  `POST`
 
 * **Request Body**
   - `payer` string
@@ -49,7 +49,7 @@ Spend points using oldest payer points first and returns which points were spent
 
 * **Success Response**
 
-  - Code: 204 No Content
+  - Code: 200 
 
 * **Error Response**
 
