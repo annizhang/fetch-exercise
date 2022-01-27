@@ -49,7 +49,27 @@ Spend points using oldest payer points first and returns which points were spent
 
 * **Success Response**
 
-  - Code: 200 
+  - Code: 200
+  - Content:
+  ```
+    {
+    "spent_points": [
+      {
+        "payer": "DANNON",
+        "points": -100
+      },
+      {
+        "payer": "UNILEVER",
+        "points": -200
+      },
+      {
+        "payer": "MILLER COORS",
+        "points": -4700
+      }
+    ]
+  }
+  ```
+
 
 * **Error Response**
 
@@ -69,24 +89,15 @@ Get Points returns total payer points
 
   - Code: 200
   - Content:
-```
+  ```
   {
-  "spent_points": [
-    {
-      "payer": "DANNON",
-      "points": -100
-    },
-    {
-      "payer": "UNILEVER",
-      "points": -200
-    },
-    {
-      "payer": "MILLER COORS",
-      "points": -4700
+    "points": {
+      "DANNON": 1000,
+      "MILLER COORS": 5300,
+      "UNILEVER": 0
     }
-  ]
-}
-```
+  }
+  ```
 
 ### Example Calls
 
@@ -165,5 +176,6 @@ curl -H "Content-Type: application/json" http://localhost:8080/points
 
 ## Notes for Improvement
 - Add unit tests
+- Handle more validation and errors
 - Wrap responses with status codes and messages
 - Add persistent storage
